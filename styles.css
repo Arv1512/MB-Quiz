@@ -1,0 +1,906 @@
+/* ============================================================
+   HOJA DE ESTILOS — ¿Eres Ariel o Benjamín?
+   Estilo: terminal sobrio, texto verde y sonido relajante
+   ============================================================ */
+
+/* --- 1. Colores del juego ---
+   Si cambias un valor aquí, cambia en toda la página. */
+:root {
+  --fondo: #06090a;
+  --magenta: #ff5fae;
+  --celeste: #8ce0ff;
+  --verde-claro: #39ff88;
+  --verde-menta: #b7ffd6;
+  --verde-oscuro: #12c96b;
+  --verde-acierto: #2fe06b;
+  --rojo: #ff5a5a;
+  --texto: #e8fff1;
+  --negro: #05080a;
+
+  /* Tonos suaves de la celebración (serpentinas y tortugas) */
+  --crema: #f7e8cd;
+  --oro: #f2cf8b;
+  --rosa: #f3c9dc;
+}
+
+/* --- 2. Regla base ---
+   box-sizing evita que el padding agrande las cajas. */
+* {
+  box-sizing: border-box;
+}
+
+/* Los elementos con "hidden" no se ven nunca, aunque tengan display propio */
+[hidden] {
+  display: none !important;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+
+/* --- 3. El cuerpo ocupa toda la pantalla y nunca hace scroll --- */
+body {
+  height: 100vh;
+  height: 100dvh;      /* altura real del móvil (sin las barras del navegador) */
+  overflow: hidden;    /* nada de barras de scroll */
+
+  display: flex;
+  justify-content: center; /* centra el bloque en horizontal */
+  align-items: stretch;    /* y lo estira para ocupar todo el alto */
+
+  /* Margen interior, respetando el notch de los móviles */
+  padding:
+    calc(14px + env(safe-area-inset-top, 0px))
+    calc(14px + env(safe-area-inset-right, 0px))
+    calc(14px + env(safe-area-inset-bottom, 0px))
+    calc(14px + env(safe-area-inset-left, 0px));
+
+  background-color: var(--fondo);
+  background-image: radial-gradient(circle at 50% 45%, #0d1714 0%, var(--fondo) 70%);
+
+  color: var(--texto);
+  font-family: "Courier New", Consolas, ui-monospace, monospace;
+  text-align: center;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Líneas de escaneo tipo pantalla CRT (solo decorativas) */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.035) 0,
+    rgba(255, 255, 255, 0.035) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+}
+
+/* --- 4. Reparto de la pantalla ---
+   Una sola escena visible a la vez, siempre centrada. */
+.pantalla {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  flex: 1 1 auto;
+  min-height: 0;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.escena {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* --- 5. Botón de bocina (esquina superior derecha) --- */
+.sonido {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 6;
+
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+
+  font-size: 1.05rem;
+  color: var(--texto);
+  background-color: rgba(6, 9, 10, 0.72);
+  border: 2px solid rgba(232, 255, 241, 0.35);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+
+  transition: border-color 150ms ease, background-color 150ms ease;
+}
+
+@media (hover: hover) {
+  .sonido:hover {
+    border-color: var(--texto);
+    background-color: rgba(255, 255, 255, 0.06);
+  }
+}
+
+.sonido:active {
+  transform: translateY(2px);
+}
+
+.sonido:focus-visible {
+  outline: 3px solid var(--texto);
+  outline-offset: 3px;
+}
+
+.sonido__icono {
+  line-height: 1;
+}
+
+/* --- 6. Primer toque --- */
+.toca {
+  padding: 1rem 1.5rem;
+  font-family: inherit;
+  font-size: clamp(0.95rem, 3.6vw, 1.1rem);
+  color: var(--verde-claro);
+  background-color: transparent;
+  border: 0;
+  cursor: pointer;
+  animation: pulsoToca 2.4s ease-in-out infinite;
+  -webkit-tap-highlight-color: transparent;
+}
+
+@keyframes pulsoToca {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+/* --- 7. Columna central --- */
+.juego {
+  width: min(100%, 36rem);
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(1.4rem, 4.5vh, 2.6rem);
+}
+
+/* --- 8. Texto con estilo de terminal ---
+   El color alterna suavemente entre tres verdes. */
+.terminal,
+.mensaje,
+.preguntaQuiz,
+.final {
+  animation: colorTerminal 9s ease-in-out infinite;
+}
+
+@keyframes colorTerminal {
+  0%, 100% {
+    color: var(--verde-claro);
+    text-shadow: 0 0 8px rgba(57, 255, 136, 0.35);
+  }
+  33% {
+    color: var(--verde-menta);
+    text-shadow: 0 0 10px rgba(183, 255, 214, 0.45);
+  }
+  66% {
+    color: var(--verde-oscuro);
+    text-shadow: 0 0 6px rgba(18, 201, 107, 0.3);
+  }
+}
+
+/* Botones y opciones que ya ocupan su sitio pero todavía no se ven */
+.esperando {
+  visibility: hidden;
+}
+
+/* --- 9. Bienvenida (cuatro líneas) --- */
+.terminal {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(0.5rem, 1.6vh, 1rem);
+  max-width: 30rem;
+}
+
+.linea {
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* "Hola" y "Gracias por estar aquí 😊" */
+.linea--saludo {
+  font-size: clamp(1.05rem, 5.2vw, 1.8rem);
+  font-weight: 700;
+}
+
+/* Línea destacada: más grande, más clara y con brillo que respira */
+.linea--destacada {
+  font-size: clamp(1.6rem, 7vw, 2.6rem);
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--verde-menta);
+  animation: brilloDestacado 2.8s ease-in-out infinite;
+}
+
+@keyframes brilloDestacado {
+  0%, 100% { text-shadow: 0 0 10px rgba(183, 255, 214, 0.35); }
+  50%      { text-shadow: 0 0 22px rgba(183, 255, 214, 0.75); }
+}
+
+/* Pregunta final de la bienvenida: un poco más pequeña */
+.linea--pregunta {
+  font-size: clamp(0.9rem, 3.4vw, 1.1rem);
+  line-height: 1.6;
+  opacity: 0.92;
+}
+
+/* --- 10. Efecto de escritura ---
+   .reserva ocupa el sitio del texto final (invisible) para que nada salte.
+   .escrito es el texto que va apareciendo, encima de la reserva. */
+.escribiendo {
+  position: relative;
+}
+
+.reserva {
+  visibility: hidden;
+}
+
+.escrito {
+  position: absolute;
+  inset: 0;
+}
+
+/* Cursor de bloque que parpadea al terminar de escribir */
+.con-cursor .escrito::after {
+  content: "▍";
+  margin-left: 2px;
+  animation: parpadeoCursor 1s steps(1) infinite;
+}
+
+@keyframes parpadeoCursor {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+/* Texto solo para lectores de pantalla (no se ve) */
+.solo-lectores {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* --- 11. Mensaje de verificación --- */
+.mensaje {
+  width: min(100%, 32rem);
+  margin: 0;
+  font-size: clamp(1rem, 3.6vw, 1.25rem);
+  font-weight: 700;
+  line-height: 1.7;
+}
+
+/* Mensaje de Benjamín: párrafo formal + pensamiento del papá */
+.mensajeMateo {
+  width: min(100%, 34rem);
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(0.8rem, 2.4vh, 1.2rem);
+}
+
+.mensaje--mateo {
+  width: 100%;
+}
+
+/* El segundo párrafo se siente como un aparte: más pequeño, tenue y en cursiva. */
+.pensamiento {
+  width: 100%;
+  margin: 0;
+  font-size: clamp(0.85rem, 3.1vw, 1rem);
+  font-style: italic;
+  font-weight: 400;
+  line-height: 1.65;
+  color: rgba(232, 255, 241, 0.72);
+}
+
+/* --- 12. Preguntas del cuestionario --- */
+.preguntaQuiz {
+  margin: 0;
+  max-width: 32rem;
+  font-size: clamp(1.05rem, 4vw, 1.7rem);
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+/* --- 13. Botones del inicio: solo borde, sin relleno --- */
+.opciones {
+  width: 100%;
+  max-width: 24rem;
+
+  display: flex;
+  flex-direction: column;
+  gap: clamp(0.7rem, 2vh, 1rem);
+}
+
+.boton {
+  width: 100%;
+  padding: clamp(0.75rem, 2.2vh, 1rem) 1rem;
+
+  font-family: inherit;
+  font-size: clamp(1rem, 3.8vw, 1.15rem);
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  line-height: 1.4;
+
+  color: var(--magenta);
+  background-color: transparent;
+  border: 3px solid currentColor;
+  border-radius: 0;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+
+  transition:
+    background-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 100ms ease,
+    color 160ms ease,
+    border-color 160ms ease;
+}
+
+.boton--ariel {
+  color: var(--magenta);
+}
+
+.boton--mateo {
+  color: var(--celeste);
+}
+
+/* Al pasar el cursor: resaltado suave (no es relleno sólido) */
+@media (hover: hover) {
+  .boton:hover {
+    background-color: rgba(255, 255, 255, 0.07);
+    box-shadow: 0 0 16px rgba(255, 255, 255, 0.12);
+    text-shadow: 0 0 8px currentColor;
+  }
+}
+
+/* Al pulsar: se rellena de color */
+.boton:active,
+.boton.elegido {
+  color: var(--negro);
+  background-color: var(--magenta);
+  border-color: var(--magenta);
+  box-shadow: 0 0 18px rgba(255, 95, 174, 0.5);
+  text-shadow: none;
+}
+
+.boton--mateo:active,
+.boton--mateo.elegido {
+  background-color: var(--celeste);
+  border-color: var(--celeste);
+  box-shadow: 0 0 18px rgba(140, 224, 255, 0.5);
+}
+
+.boton:active {
+  transform: translateY(2px);
+}
+
+/* --- 14. Opciones del cuestionario ---
+   Fondo transparente; verde si acierta, rojo si falla. */
+.opcion {
+  width: 100%;
+  padding: clamp(0.7rem, 2vh, 0.95rem) 1rem;
+
+  font-family: inherit;
+  font-size: clamp(0.95rem, 3.5vw, 1.1rem);
+  font-weight: 700;
+  line-height: 1.4;
+
+  color: var(--texto);
+  background-color: transparent;
+  border: 3px solid rgba(232, 255, 241, 0.45);
+  border-radius: 0;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 100ms ease,
+    color 160ms ease,
+    font-size 380ms ease,
+    padding 380ms ease,
+    opacity 380ms ease,
+    filter 380ms ease;
+}
+
+@media (hover: hover) {
+  .opcion:not(:disabled):hover {
+    background-color: rgba(255, 255, 255, 0.07);
+    border-color: var(--texto);
+    box-shadow: 0 0 16px rgba(255, 255, 255, 0.12);
+  }
+}
+
+.opcion:active:not(:disabled) {
+  transform: translateY(2px);
+}
+
+/* Respuesta correcta */
+.opcion.correcta {
+  color: var(--negro);
+  background-color: var(--verde-acierto);
+  border-color: var(--verde-acierto);
+  box-shadow: 0 0 18px rgba(47, 224, 107, 0.5);
+}
+
+/* Respuesta incorrecta */
+.opcion.incorrecta {
+  color: var(--negro);
+  background-color: var(--rojo);
+  border-color: var(--rojo);
+  box-shadow: 0 0 18px rgba(255, 90, 90, 0.45);
+}
+
+.opcion:disabled {
+  cursor: default;
+}
+
+/* Opción dorada que aparece al final de la tercera pregunta */
+.opcion--dorada {
+  color: var(--oro);
+  border-color: var(--oro);
+  font-size: clamp(1rem, 3.8vw, 1.2rem);
+  box-shadow:
+    0 0 18px rgba(242, 207, 139, 0.32),
+    inset 0 0 14px rgba(242, 207, 139, 0.12);
+  animation: brilloDorado 2.4s ease-in-out infinite;
+}
+
+@keyframes brilloDorado {
+  0%, 100% {
+    box-shadow:
+      0 0 14px rgba(242, 207, 139, 0.28),
+      inset 0 0 12px rgba(242, 207, 139, 0.1);
+  }
+  50% {
+    box-shadow:
+      0 0 26px rgba(242, 207, 139, 0.5),
+      inset 0 0 18px rgba(242, 207, 139, 0.18);
+  }
+}
+
+@media (hover: hover) {
+  .opcion--dorada:not(:disabled):hover {
+    background-color: rgba(242, 207, 139, 0.1);
+    border-color: var(--oro);
+    box-shadow: 0 0 24px rgba(242, 207, 139, 0.45);
+    text-shadow: 0 0 10px rgba(242, 207, 139, 0.5);
+  }
+}
+
+/* Entrada suave de la opción dorada: aparece y luego respira */
+.opcion.aparece {
+  animation:
+    aparecerDorada 620ms cubic-bezier(0.2, 0.8, 0.2, 1) both,
+    brilloDorado 2.4s ease-in-out 620ms infinite;
+}
+
+@keyframes aparecerDorada {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Opciones ya descartadas: se encogen para dejar sitio a la dorada */
+.opcion.descartada {
+  padding-block: 0.38rem;
+  font-size: clamp(0.76rem, 2.9vw, 0.88rem);
+  opacity: 0.45;
+  filter: grayscale(0.35);
+}
+
+/* Accesibilidad: marco visible al navegar con el teclado */
+.boton:focus-visible,
+.opcion:focus-visible,
+.toca:focus-visible,
+.sonido:focus-visible {
+  outline: 3px solid var(--texto);
+  outline-offset: 3px;
+}
+
+/* --- 15. Mensaje final del quiz --- */
+.final {
+  margin: 0;
+  max-width: 30rem;
+  font-size: clamp(1.5rem, 7vw, 2.6rem);
+  font-weight: 700;
+  line-height: 1.4;
+  transition: opacity 700ms ease, transform 700ms ease;
+}
+
+/* Cuando toca despedirlo, se desvanece suavemente */
+.final.fundido {
+  opacity: 0;
+  transform: scale(0.97);
+}
+
+/* --- 16. Celebración: tortugas que forman la frase --- */
+.mensajeTortugas {
+  position: relative;
+  z-index: 2;
+  margin: 0;
+  max-width: min(100%, 34rem);
+  font-size: clamp(1.35rem, 7.4vw, 2.7rem);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  line-height: 1.2;
+  color: var(--verde-menta);
+}
+
+/* Cada letra ocupa su hueco desde el principio, pero se ve al llegar su tortuga */
+.letra {
+  display: inline-block;
+  visibility: hidden;
+}
+
+.letra.puesta {
+  visibility: visible;
+  animation: asentarLetra 460ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@keyframes asentarLetra {
+  from {
+    opacity: 0;
+    transform: translateY(-7px) scale(0.7);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Brillo al completarse la frase: sube y luego se queda suave */
+.mensajeTortugas.completo {
+  animation: brilloFrase 2.6s ease-out both;
+}
+
+@keyframes brilloFrase {
+  0% {
+    text-shadow: 0 0 0 rgba(183, 255, 214, 0);
+  }
+  35% {
+    text-shadow:
+      0 0 20px rgba(183, 255, 214, 0.9),
+      0 0 52px rgba(242, 207, 139, 0.5);
+  }
+  100% {
+    text-shadow:
+      0 0 12px rgba(183, 255, 214, 0.5),
+      0 0 30px rgba(242, 207, 139, 0.24);
+  }
+}
+
+/* Capa donde vuelan las tortugas. Es fija para poder entrar desde fuera
+   de la pantalla sin crear barras de scroll. */
+.capaTortugas {
+  position: fixed;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.tortuga {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: clamp(26px, 7vw, 34px);
+  opacity: 1;
+  transition: opacity 340ms ease;
+  will-change: transform;
+}
+
+/* Al entregar su letra, la tortuga se desvanece */
+.tortuga.entregada {
+  opacity: 0;
+}
+
+.tortuga__cuerpo {
+  position: relative;
+  display: block;
+  animation: flotarTortuga 1.9s ease-in-out infinite;
+}
+
+.tortuga__dibujo {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* La letra viaja sobre el caparazón, en una pequeña etiqueta */
+.tortuga__letra {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 2px);
+  transform: translateX(-50%);
+
+  padding: 0 3px;
+  font-size: 0.6rem;
+  font-weight: 700;
+  line-height: 1.4;
+
+  color: var(--crema);
+  background-color: rgba(6, 9, 10, 0.75);
+  border: 1px solid rgba(247, 232, 205, 0.35);
+  border-radius: 3px;
+}
+
+@keyframes flotarTortuga {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-2px); }
+}
+
+/* --- 16b. Celebración: hormigas que forman los mensajes --- */
+.mensajeHormigas {
+  position: relative;
+  z-index: 2;
+  margin: 0;
+  max-width: min(100%, 40rem);
+  font-size: clamp(1.05rem, 5.4vw, 2.2rem);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  line-height: 1.28;
+  color: var(--crema);
+}
+
+/* Brillo cálido al completarse los dos mensajes */
+.mensajeHormigas.completo {
+  animation: brilloHormigas 2.6s ease-out both;
+}
+
+@keyframes brilloHormigas {
+  0% {
+    text-shadow: 0 0 0 rgba(242, 207, 139, 0);
+  }
+  35% {
+    text-shadow:
+      0 0 22px rgba(242, 207, 139, 0.95),
+      0 0 58px rgba(243, 201, 220, 0.55);
+  }
+  100% {
+    text-shadow:
+      0 0 12px rgba(242, 207, 139, 0.55),
+      0 0 30px rgba(243, 201, 220, 0.3);
+  }
+}
+
+.capaHormigas {
+  position: fixed;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.hormiga {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: clamp(15px, 4vw, 20px);
+  opacity: 1;
+  transition: opacity 300ms ease;
+  will-change: transform;
+}
+
+/* Al entregar su letra, la hormiga se desvanece */
+.hormiga.entregada {
+  opacity: 0;
+}
+
+.hormiga__cuerpo {
+  position: relative;
+  display: block;
+  animation: flotarHormiga 1.4s ease-in-out infinite;
+}
+
+.hormiga__dibujo {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* La letra viaja sobre la hormiga, en una etiqueta pequeña */
+.hormiga__letra {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 1px);
+  transform: translateX(-50%);
+
+  padding: 0 2px;
+  font-size: 0.52rem;
+  font-weight: 700;
+  line-height: 1.35;
+
+  color: var(--crema);
+  background-color: rgba(6, 9, 10, 0.78);
+  border: 1px solid rgba(247, 232, 205, 0.32);
+  border-radius: 2px;
+}
+
+@keyframes flotarHormiga {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-1.5px); }
+}
+
+/* Lienzo de serpentinas y fuegos artificiales (detrás del texto) */
+.lienzoFiesta {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* --- 17. Pantallas muy bajas (móvil en horizontal) --- */
+@media (max-height: 520px) {
+  .sonido {
+    width: 36px;
+    height: 36px;
+    font-size: 0.95rem;
+  }
+
+  .juego {
+    gap: 0.9rem;
+  }
+
+  .terminal {
+    gap: 0.35rem;
+  }
+
+  .linea--saludo {
+    font-size: 1.1rem;
+  }
+
+  .linea--destacada {
+    font-size: 1.35rem;
+  }
+
+  .linea--pregunta {
+    font-size: 0.85rem;
+    line-height: 1.45;
+  }
+
+  .boton,
+  .opcion {
+    font-size: 0.95rem;
+    padding-block: 0.55rem;
+  }
+
+  .mensaje {
+    font-size: 0.95rem;
+    line-height: 1.55;
+  }
+
+  .mensajeMateo {
+    gap: 0.5rem;
+  }
+
+  .mensaje--mateo {
+    font-size: 0.92rem;
+    line-height: 1.5;
+  }
+
+  .pensamiento {
+    font-size: 0.78rem;
+    line-height: 1.45;
+  }
+
+  .opcion {
+    font-size: 0.86rem;
+    padding-block: 0.45rem;
+  }
+
+  .opcion--dorada {
+    font-size: 0.95rem;
+  }
+
+  .preguntaQuiz {
+    font-size: clamp(1rem, 2.6vw, 1.3rem);
+    line-height: 1.35;
+  }
+
+  .mensajeTortugas {
+    font-size: clamp(1.05rem, 4.6vw, 1.7rem);
+  }
+
+  .mensajeHormigas {
+    font-size: clamp(0.95rem, 4.2vw, 1.55rem);
+    line-height: 1.22;
+  }
+
+  .tortuga {
+    width: clamp(22px, 5vw, 30px);
+  }
+
+  .hormiga {
+    width: clamp(13px, 3.4vw, 17px);
+  }
+}
+
+/* --- 18. Usuarios que prefieren menos animaciones ---
+   Se mantiene la escritura (es el efecto principal), pero se apagan
+   los pulsos, el parpadeo del cursor y el vuelo de las tortugas. */
+@media (prefers-reduced-motion: reduce) {
+  .terminal,
+  .mensaje,
+  .preguntaQuiz,
+  .final {
+    animation: none;
+    color: var(--verde-claro);
+    text-shadow: 0 0 8px rgba(57, 255, 136, 0.35);
+  }
+
+  .linea--destacada {
+    animation: none;
+    text-shadow: 0 0 12px rgba(183, 255, 214, 0.5);
+  }
+
+  .toca,
+  .con-cursor .escrito::after {
+    animation: none;
+  }
+
+  .tortuga__cuerpo,
+  .hormiga__cuerpo,
+  .letra.puesta {
+    animation: none;
+  }
+
+  .mensajeTortugas,
+  .mensajeTortugas.completo {
+    animation: none;
+    text-shadow: 0 0 12px rgba(183, 255, 214, 0.45);
+  }
+
+  .mensajeHormigas,
+  .mensajeHormigas.completo {
+    animation: none;
+    text-shadow:
+      0 0 12px rgba(242, 207, 139, 0.55),
+      0 0 30px rgba(243, 201, 220, 0.3);
+  }
+
+  .opcion--dorada,
+  .opcion.aparece {
+    animation: none;
+    box-shadow:
+      0 0 18px rgba(242, 207, 139, 0.32),
+      inset 0 0 14px rgba(242, 207, 139, 0.12);
+  }
+
+  .boton,
+  .opcion,
+  .sonido,
+  .final {
+    transition: none;
+  }
+}
