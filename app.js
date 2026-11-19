@@ -1,40 +1,19 @@
 /* ============================================================
-   LÓGICA DEL JUEGO — Versión 7
-   1) Sonido: música relajante + efectos (todo sintetizado)
+   LÓGICA DEL JUEGO — Versión 8
+   1) Sonido: solo efectos (todo sintetizado, sin música)
    2) Efecto de escritura para todos los textos
    3) Bienvenida, mensajes, cuestionarios y finales
-   4) Celebración: tortugas y hormigas, serpentinas y fuegos
-   5) Botón de la bocina
+   4) Celebración: tortugas, serpentinas y fuegos artificiales
    ============================================================ */
 
 /* ------------------------------------------------------------
    1. SONIDO
-   Dos "buses" separados:
-   - gananciaMusica  -> la controla el botón de la bocina
-   - gananciaEfectos -> siempre encendido
+   Solo hay un bus de efectos: teclas, botones, aciertos, errores,
+   fanfarria y aplausos. No hay música de fondo.
    ------------------------------------------------------------ */
 
-/* Melodía pentatónica y lenta. El 0 significa silencio (respiro). */
-const MELODIA = [
-  392.0, 0, 523.25, 0,
-  440.0, 0, 587.33, 0,
-  349.23, 0, 440.0, 0,
-  392.0, 0, 0, 0
-];
-
-/* Un bajo suave cada cuatro pasos. */
-const BAJOS = [196.0, 220.0, 174.61, 196.0];
-
-const PASO_MUSICA = 900;      // milisegundos entre pasos (tempo lento)
-const VOLUMEN_MUSICA = 0.06;
-
 let contextoAudio = null;     // el "motor" de sonido del navegador
-let gananciaMusica = null;    // volumen de la música de fondo
 let gananciaEfectos = null;   // volumen de hover, clic, teclas...
-let musicaSilenciada = false; // ¿el jugador pulsó la bocina?
-let musicaActiva = false;     // ¿está sonando el bucle de fondo?
-let temporizadorMusica = null;
-let posicionMelodia = 0;
 let ultimoHover = 0;          // para no repetir el sonido de hover sin parar
 let ruidoBlanco = null;       // se usa para el sonido de aplausos
 
@@ -47,19 +26,14 @@ function crearAudio() {
 
   contextoAudio = new Constructor();
 
-  gananciaMusica = contextoAudio.createGain();
-  gananciaMusica.gain.value = musicaSilenciada ? 0 : 1;
-  gananciaMusica.connect(contextoAudio.destination);
-
   gananciaEfectos = contextoAudio.createGain();
   gananciaEfectos.gain.value = 1;
   gananciaEfectos.connect(contextoAudio.destination);
 }
 
 /* Toca una nota corta o larga.
-   "bus" elige el volumen: "musica" o "efectos".
    "ataque" son los segundos que tarda en alcanzar el volumen. */
-function tocarNota(frecuencia, duracion, tipo, volumen, retraso, bus, ataque) {
+function tocarNota(frecuencia, duracion, tipo, volumen, retraso, ataque) {
   if (!contextoAudio) return;
 
   const inicio = contextoAudio.currentTime + (retraso || 0);
@@ -76,42 +50,10 @@ function tocarNota(frecuencia, duracion, tipo, volumen, retraso, bus, ataque) {
   ganancia.gain.exponentialRampToValueAtTime(0.0001, inicio + duracion);
 
   oscilador.connect(ganancia);
-  ganancia.connect(bus === "musica" ? gananciaMusica : gananciaEfectos);
+  ganancia.connect(gananciaEfectos);
 
   oscilador.start(inicio);
   oscilador.stop(inicio + duracion + 0.05);
-}
-
-/* Un paso de la música de fondo. */
-function pasoMusica() {
-  if (!musicaActiva) return;
-
-  const paso = posicionMelodia;
-  const nota = MELODIA[paso];
-
-  if (nota > 0) {
-    tocarNota(nota, 1.6, "sine", VOLUMEN_MUSICA, 0, "musica", 0.35);
-    tocarNota(nota * 2, 1.1, "sine", VOLUMEN_MUSICA * 0.22, 0, "musica", 0.5);
-  }
-
-  if (paso % 4 === 0) {
-    const bajo = BAJOS[(paso / 4) % BAJOS.length];
-    tocarNota(bajo, 2.4, "triangle", VOLUMEN_MUSICA * 0.5, 0, "musica", 0.7);
-  }
-
-  posicionMelodia = (paso + 1) % MELODIA.length;
-  temporizadorMusica = setTimeout(pasoMusica, PASO_MUSICA);
-}
-
-function encenderMusica() {
-  if (musicaActiva || musicaSilenciada) return;
-  musicaActiva = true;
-  pasoMusica();
-}
-
-function apagarMusica() {
-  musicaActiva = false;
-  clearTimeout(temporizadorMusica);
 }
 
 /* Efecto al pasar el cursor: blip corto y agudo. */
@@ -119,34 +61,34 @@ function sonidoHover() {
   const ahora = Date.now();
   if (ahora - ultimoHover < 70) return; // evita ráfagas de sonido
   ultimoHover = ahora;
-  tocarNota(1046.5, 0.06, "square", 0.05, 0, "efectos");
+  tocarNota(1046.5, 0.06, "square", 0.05);
 }
 
 /* Efecto al pulsar un botón: arpegio ascendente tipo arcade. */
 function sonidoClic(frecuenciaBase) {
-  tocarNota(frecuenciaBase, 0.09, "square", 0.12, 0, "efectos");
-  tocarNota(frecuenciaBase * 1.5, 0.1, "square", 0.12, 0.07, "efectos");
-  tocarNota(frecuenciaBase * 2, 0.16, "square", 0.12, 0.14, "efectos");
+  tocarNota(frecuenciaBase, 0.09, "square", 0.12);
+  tocarNota(frecuenciaBase * 1.5, 0.1, "square", 0.12, 0.07);
+  tocarNota(frecuenciaBase * 2, 0.16, "square", 0.12, 0.14);
 }
 
 /* Tecla de la máquina de escribir: chasquido muy corto.
    El tono cambia un poco en cada letra para que no suene monótono. */
 function sonidoTecla() {
   const tono = 1400 + Math.random() * 400;
-  tocarNota(tono, 0.03, "square", 0.035, 0, "efectos");
+  tocarNota(tono, 0.03, "square", 0.035);
 }
 
 /* Respuesta correcta: tres notas que suben. */
 function sonidoAcierto() {
-  tocarNota(523.25, 0.12, "triangle", 0.13, 0, "efectos", 0.01);
-  tocarNota(659.25, 0.12, "triangle", 0.13, 0.1, "efectos", 0.01);
-  tocarNota(783.99, 0.3, "triangle", 0.13, 0.2, "efectos", 0.01);
+  tocarNota(523.25, 0.12, "triangle", 0.13, 0, 0.01);
+  tocarNota(659.25, 0.12, "triangle", 0.13, 0.1, 0.01);
+  tocarNota(783.99, 0.3, "triangle", 0.13, 0.2, 0.01);
 }
 
 /* Respuesta incorrecta: dos notas que bajan. */
 function sonidoError() {
-  tocarNota(196.0, 0.16, "square", 0.1, 0, "efectos");
-  tocarNota(146.83, 0.3, "square", 0.1, 0.14, "efectos");
+  tocarNota(196.0, 0.16, "square", 0.1);
+  tocarNota(146.83, 0.3, "square", 0.1, 0.14);
 }
 
 /* Celebración al cerrar el cuestionario: fanfarria corta y cálida. */
@@ -154,13 +96,13 @@ function sonidoFanfarria() {
   const notas = [523.25, 659.25, 783.99, 1046.5];
 
   notas.forEach(function (nota, indice) {
-    tocarNota(nota, 0.5, "triangle", 0.12, indice * 0.14, "efectos", 0.02);
-    tocarNota(nota * 0.5, 0.6, "sine", 0.06, indice * 0.14, "efectos", 0.04);
+    tocarNota(nota, 0.5, "triangle", 0.12, indice * 0.14, 0.02);
+    tocarNota(nota * 0.5, 0.6, "sine", 0.06, indice * 0.14, 0.04);
   });
 
   /* Acorde final que deja la fanfarria flotando un momento. */
   [523.25, 659.25, 783.99].forEach(function (nota) {
-    tocarNota(nota, 1.1, "triangle", 0.09, 0.62, "efectos", 0.08);
+    tocarNota(nota, 1.1, "triangle", 0.09, 0.62, 0.08);
   });
 }
 
@@ -207,18 +149,16 @@ function sonidoAplausos() {
   }
 }
 
-/* Si la persona cambia de pestaña o bloquea el móvil, la música y la
-   celebración se pausan. */
+/* Si la persona cambia de pestaña o bloquea el móvil, la celebración
+   se pausa y el audio se suspende. */
 document.addEventListener("visibilitychange", function () {
   if (document.hidden) {
-    apagarMusica();
     pausarFiesta();
   } else {
     if (contextoAudio && contextoAudio.state !== "closed") {
       if (contextoAudio.state === "suspended") {
         contextoAudio.resume();
       }
-      encenderMusica();
     }
     reanudarFiesta();
   }
@@ -235,8 +175,7 @@ const escenas = {
   mensajeMateo: document.getElementById("escenaMensajeMateo"),
   quiz: document.getElementById("escenaQuiz"),
   final: document.getElementById("escenaFinal"),
-  tortugas: document.getElementById("escenaTortugas"),
-  hormigas: document.getElementById("escenaHormigas")
+  tortugas: document.getElementById("escenaTortugas")
 };
 
 const bloqueBienvenida = document.getElementById("bloqueBienvenida");
@@ -250,8 +189,6 @@ const mensajeFinal = document.getElementById("mensajeFinal");
 const botonComenzar = document.getElementById("botonComenzar");
 const mensajeTortugas = document.getElementById("mensajeTortugas");
 const capaTortugas = document.getElementById("capaTortugas");
-const mensajeHormigas = document.getElementById("mensajeHormigas");
-const capaHormigas = document.getElementById("capaHormigas");
 const lienzoFiesta = document.getElementById("lienzoFiesta");
 
 /* Guardamos los textos tal como están escritos en el HTML. */
@@ -276,7 +213,6 @@ mensajeMateo.textContent = "";
 pensamientoPapa.textContent = "";
 mensajeFinal.textContent = "";
 mensajeTortugas.textContent = "";
-mensajeHormigas.textContent = "";
 
 /* Muestra una escena y esconde las demás. */
 function mostrarEscena(nombre) {
@@ -362,11 +298,8 @@ function comenzar() {
   yaComenzo = true;
 
   crearAudio();
-  if (contextoAudio) {
-    if (contextoAudio.state === "suspended") {
-      contextoAudio.resume();
-    }
-    encenderMusica();
+  if (contextoAudio && contextoAudio.state === "suspended") {
+    contextoAudio.resume();
   }
 
   mostrarEscena("inicio");
@@ -469,9 +402,14 @@ function empezarMensajeMateo() {
   escribirEn(escritoMensaje, TEXTO_MATEO, function () {
     setTimeout(function () {
       escribirEn(escritoPensamiento, TEXTO_PENSAMIENTO, function () {
+        /* El cursor parpadea al final del último párrafo. */
+        pensamientoPapa.classList.add("con-cursor");
+
+        /* Cinco segundos para leer con calma antes de las preguntas. */
         setTimeout(function () {
+          pensamientoPapa.classList.remove("con-cursor");
           empezarQuiz("mateo");
-        }, 700);
+        }, PAUSA_CURSOR);
       });
     }, 500);
   });
@@ -657,7 +595,9 @@ function responderIncorrecta(boton) {
 function terminarQuiz() {
   const cuestionario = CUESTIONARIOS[quizActual];
   const esMateo = quizActual === "mateo";
-  const irAlFinal = esMateo ? empezarHormigas : empezarTortugas;
+  const irAlFinal = function () {
+    empezarTortugas(quizActual);
+  };
 
   mostrarEscena("final");
 
@@ -694,7 +634,7 @@ function terminarQuiz() {
 }
 
 /* ------------------------------------------------------------
-   8. CELEBRACIÓN: TORTUGAS, HORMIGAS, SERPENTINAS Y FUEGOS
+   8. CELEBRACIÓN: TORTUGAS, SERPENTINAS Y FUEGOS
    ------------------------------------------------------------ */
 
 const prefiereMenosMovimiento = window.matchMedia(
@@ -719,61 +659,69 @@ const DIBUJO_TORTUGA =
       'stroke="#5aa989" stroke-width="0.9" stroke-linecap="round" opacity="0.55" fill="none"/>' +
   '</svg>';
 
-/* Dibujo de una hormiga vista desde arriba. También en SVG, sin imágenes
-   externas: cuerpo ámbar cálido, patas finas y antenas. */
-const DIBUJO_HORMIGA =
-  '<svg class="hormiga__dibujo" viewBox="0 0 24 34" aria-hidden="true">' +
-    '<path d="M10.4 4.4 Q8.6 1.8 6.8 2.8 M13.6 4.4 Q15.4 1.8 17.2 2.8" ' +
-      'stroke="#6b3a22" stroke-width="1" stroke-linecap="round" fill="none"/>' +
-    '<path d="M9 11.4 L4.2 8.4 M9 14 L3.4 14 M9 16.6 L4.2 19.6" ' +
-      'stroke="#6b3a22" stroke-width="1.1" stroke-linecap="round" fill="none"/>' +
-    '<path d="M15 11.4 L19.8 8.4 M15 14 L20.6 14 M15 16.6 L19.8 19.6" ' +
-      'stroke="#6b3a22" stroke-width="1.1" stroke-linecap="round" fill="none"/>' +
-    '<ellipse cx="12" cy="24.6" rx="5" ry="6.4" fill="#8a4a2a"/>' +
-    '<ellipse cx="12" cy="23.4" rx="2.6" ry="3.6" fill="#b9713f" opacity="0.55"/>' +
-    '<ellipse cx="12" cy="14.4" rx="3.4" ry="4.2" fill="#a65f38"/>' +
-    '<circle cx="12" cy="6.4" r="3.1" fill="#7a3f24"/>' +
-    '<circle cx="10.9" cy="5.7" r="0.55" fill="#f4e7cf"/>' +
-    '<circle cx="13.1" cy="5.7" r="0.55" fill="#f4e7cf"/>' +
-  '</svg>';
+/* --- 8.1 Los finales y sus letras --- */
 
-/* --- 8.1 Las frases y sus letras --- */
-
-/* Cada línea va por separado para controlar el salto de línea. */
-const LINEAS_TORTUGAS = ["FELIZ 1er AÑO", "COMO MAMÁ"];
-
-const LINEAS_HORMIGAS = ["FELIZ 1er AÑO DE VIDA.", "TE AMO MUCHO HIJO 🤗🥲"];
+/* El título lo forman las tortugas; los párrafos aparecen después.
+   El texto visible es exactamente este. */
+const FINALES = {
+  ariel: {
+    titulo: ["FELIZ 1er AÑO", "COMO MAMÁ"],
+    parrafos: [
+      "La maternidad no inicia desde el nacimiento. Inicia con la concepción, cuando una parte de papá y mamá se juntan para formar una nueva vida.",
+      "Tu etapa de mamá empezó hace 12 meses cuando nuestro hijo se formaba en tu vientre.",
+      "Por eso hoy cumples tu primer añito como mamá. 🤱",
+      "Que Dios te bendiga y te guarde siempre. 🤗"
+    ]
+  },
+  mateo: {
+    titulo: ["FELIZ 1er AÑO DE VIDA"],
+    parrafos: [
+      "Tu historia no empezó cuando naciste. Tu vida inició hace 12 meses dentro de mamá, cuando Dios permitió que la semillita de papá y mamá se juntara para formarte.",
+      "Te amo hijo 🤗💜"
+    ]
+  }
+};
 
 let fraseCompleta = false;
 
-function empezarTortugas() {
+function empezarTortugas(cual) {
   fraseCompleta = false;
   mostrarEscena("tortugas");
 
+  const datos = FINALES[cual];
+
+  mensajeTortugas.classList.remove("completo");
+  mensajeTortugas.textContent = "";
+
+  const titulo = document.createElement("h2");
+  titulo.className = "tituloTortugas";
+  mensajeTortugas.appendChild(titulo);
+
+  const textoFinal = document.createElement("div");
+  textoFinal.className = "textoFinal";
+
+  datos.parrafos.forEach(function (parrafo, indice) {
+    const linea = document.createElement("p");
+    linea.textContent = parrafo;
+
+    /* La última línea (cierre o bendición) se destaca un poco más. */
+    if (indice === datos.parrafos.length - 1) {
+      linea.classList.add("cierre");
+    }
+
+    textoFinal.appendChild(linea);
+  });
+
+  mensajeTortugas.appendChild(textoFinal);
+
   construirLetras(
-    mensajeTortugas,
+    titulo,
     capaTortugas,
-    LINEAS_TORTUGAS,
+    datos.titulo,
     DIBUJO_TORTUGA,
     "tortuga",
     function () {
-      completarFrase(mensajeTortugas);
-    }
-  );
-}
-
-function empezarHormigas() {
-  fraseCompleta = false;
-  mostrarEscena("hormigas");
-
-  construirLetras(
-    mensajeHormigas,
-    capaHormigas,
-    LINEAS_HORMIGAS,
-    DIBUJO_HORMIGA,
-    "hormiga",
-    function () {
-      completarFrase(mensajeHormigas);
+      completarFrase(mensajeTortugas, textoFinal);
     }
   );
 }
@@ -870,11 +818,10 @@ function posicionCriatura(x, y, giro) {
   );
 }
 
-/* Crea una criatura por letra y la lleva hasta su hueco. */
+/* Crea una tortuga por letra y la lleva hasta su hueco. */
 function repartirLetras(letras, config) {
   const ancho = window.innerWidth;
   const alto = window.innerHeight;
-  const esHormiga = config.clase === "hormiga";
   let entregadas = 0;
 
   letras.forEach(function (letra, indice) {
@@ -898,21 +845,17 @@ function repartirLetras(letras, config) {
     cuerpo.insertAdjacentHTML("beforeend", config.dibujo);
     criatura.appendChild(cuerpo);
 
-    /* Colocamos la criatura en su punto de salida antes de animarla. */
+    /* Colocamos la tortuga en su punto de salida antes de animarla. */
     criatura.style.transform = posicionCriatura(salida.x, salida.y, 0);
     config.capa.appendChild(criatura);
 
-    /* Las hormigas caminan un poco más rápido y se escalonan más juntas. */
-    const duracion =
-      (esHormiga ? 1650 : 1500) + Math.random() * (esHormiga ? 420 : 450);
-    const retraso =
-      indice * (esHormiga ? 70 : 95) + Math.random() * (esHormiga ? 90 : 120);
-    const giroInicio = (Math.random() - 0.5) * (esHormiga ? 14 : 26);
-    const curva = esHormiga ? 0.08 : 0.12;
+    const duracion = 1500 + Math.random() * 450;
+    const retraso = indice * 95 + Math.random() * 120;
+    const giroInicio = (Math.random() - 0.5) * 26;
 
     /* Un punto medio desviado crea una curva suave, no una línea recta. */
-    const medioX = (salida.x + destinoX) / 2 + (destinoY - salida.y) * curva;
-    const medioY = (salida.y + destinoY) / 2 - (destinoX - salida.x) * curva;
+    const medioX = (salida.x + destinoX) / 2 + (destinoY - salida.y) * 0.12;
+    const medioY = (salida.y + destinoY) / 2 - (destinoX - salida.x) * 0.12;
 
     const animacion = criatura.animate(
       [
@@ -959,20 +902,39 @@ function repartirLetras(letras, config) {
   });
 }
 
-/* La frase está formada: brilla y empieza la celebración. */
-function completarFrase(contenedor) {
+/* El título está formado: brilla, aparecen los párrafos y empieza la fiesta. */
+function completarFrase(contenedor, textoFinal) {
   if (fraseCompleta) return;
   fraseCompleta = true;
 
   contenedor.classList.add("completo");
 
+  const parrafos = Array.from(textoFinal.querySelectorAll("p"));
+
   /* Con menos movimiento no hay fiesta visual, solo el brillo sereno. */
   if (prefiereMenosMovimiento) {
+    parrafos.forEach(function (parrafo) {
+      parrafo.classList.add("visible");
+    });
     sonidoAplausos();
     return;
   }
 
-  setTimeout(iniciarFiesta, 1100);
+  /* Los párrafos entran uno tras otro, con calma. */
+  const inicio = 350;
+  const paso = 420;
+
+  parrafos.forEach(function (parrafo, indice) {
+    setTimeout(function () {
+      parrafo.classList.add("visible");
+    }, inicio + indice * paso);
+  });
+
+  /* Cuando la última línea ya se está asentando, empieza la celebración. */
+  const espera =
+    inicio + Math.max(0, parrafos.length - 1) * paso + 900;
+
+  setTimeout(iniciarFiesta, espera);
 }
 
 /* --- 8.2 Serpentinas y fuegos artificiales (canvas) --- */
@@ -1329,66 +1291,3 @@ window.addEventListener("resize", function () {
   if (!fiestaActiva) return;
   ajustarLienzo();
 });
-
-/* ------------------------------------------------------------
-   9. BOTÓN DE LA BOCINA (solo música)
-   ------------------------------------------------------------ */
-
-const botonSonido = document.getElementById("botonSonido");
-const iconoSonido = document.getElementById("iconoSonido");
-
-/* Recordamos la preferencia entre visitas.
-   localStorage puede estar bloqueado en algunos navegadores con
-   file://, por eso todo va dentro de try/catch. */
-function guardarSilencio(valor) {
-  try {
-    localStorage.setItem("quiz-silencio", valor ? "1" : "0");
-  } catch (error) {
-    /* Sin memoria: la página funciona igual. */
-  }
-}
-
-function leerSilencio() {
-  try {
-    return localStorage.getItem("quiz-silencio") === "1";
-  } catch (error) {
-    return false;
-  }
-}
-
-function mostrarEstadoSonido() {
-  iconoSonido.textContent = musicaSilenciada ? "🔇" : "🔊";
-  botonSonido.setAttribute("aria-pressed", musicaSilenciada ? "true" : "false");
-  botonSonido.setAttribute(
-    "aria-label",
-    musicaSilenciada ? "Activar música" : "Silenciar música"
-  );
-}
-
-botonSonido.addEventListener("click", function () {
-  musicaSilenciada = !musicaSilenciada;
-
-  if (contextoAudio) {
-    gananciaMusica.gain.setTargetAtTime(
-      musicaSilenciada ? 0 : 1,
-      contextoAudio.currentTime,
-      0.05
-    );
-  }
-
-  if (musicaSilenciada) {
-    apagarMusica();
-  } else {
-    crearAudio();
-    if (contextoAudio && contextoAudio.state === "suspended") {
-      contextoAudio.resume();
-    }
-    encenderMusica();
-  }
-
-  guardarSilencio(musicaSilenciada);
-  mostrarEstadoSonido();
-});
-
-musicaSilenciada = leerSilencio();
-mostrarEstadoSonido();

@@ -18,12 +18,6 @@
          Es transparente y va detrás del texto. -->
     <canvas class="lienzoFiesta" id="lienzoFiesta" aria-hidden="true" hidden></canvas>
 
-    <!-- Botón de bocina: solo activa o silencia la música de fondo -->
-    <button type="button" class="sonido" id="botonSonido"
-            aria-label="Silenciar música" aria-pressed="false">
-      <span class="sonido__icono" id="iconoSonido" aria-hidden="true">🔊</span>
-    </button>
-
     <!-- ESCENA 0: primer toque (desbloquea el audio) -->
     <section class="escena" id="escenaToca">
       <button type="button" class="toca" id="botonComenzar">Toca para comenzar</button>
@@ -79,20 +73,13 @@
       <h2 class="final" id="mensajeFinal" aria-live="polite">¡Realmente eres Ariel!</h2>
     </section>
 
-    <!-- ESCENA 5: celebración con tortugas -->
+    <!-- ESCENA 5: celebración final con tortugas.
+         El título y los párrafos se crean desde app.js según el flujo. -->
     <section class="escena" id="escenaTortugas" hidden>
       <!-- Capa donde vuelan las tortugas (no ocupa sitio en el diseño) -->
       <div class="capaTortugas" id="capaTortugas" aria-hidden="true"></div>
 
-      <h2 class="mensajeTortugas" id="mensajeTortugas" aria-live="polite">FELIZ 1er AÑO COMO MAMÁ</h2>
-    </section>
-
-    <!-- ESCENA 6: celebración con hormigas -->
-    <section class="escena" id="escenaHormigas" hidden>
-      <!-- Capa donde caminan las hormigas (no ocupa sitio en el diseño) -->
-      <div class="capaHormigas" id="capaHormigas" aria-hidden="true"></div>
-
-      <h2 class="mensajeHormigas" id="mensajeHormigas" aria-live="polite">FELIZ 1er AÑO DE VIDA.<br>TE AMO MUCHO HIJO 🤗🥲</h2>
+      <div class="mensajeTortugas" id="mensajeTortugas" aria-live="polite"></div>
     </section>
 
   </main>

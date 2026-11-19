@@ -1,6 +1,6 @@
 /* ============================================================
    HOJA DE ESTILOS — ¿Eres Ariel o Benjamín?
-   Estilo: terminal sobrio, texto verde y sonido relajante
+   Estilo: terminal sobrio, texto verde y efectos de sonido
    ============================================================ */
 
 /* --- 1. Colores del juego ---
@@ -105,49 +105,7 @@ body::after {
   justify-content: center;
 }
 
-/* --- 5. Botón de bocina (esquina superior derecha) --- */
-.sonido {
-  position: absolute;
-  top: 0;
-  right: 0;
-  z-index: 6;
-
-  width: 42px;
-  height: 42px;
-  display: grid;
-  place-items: center;
-
-  font-size: 1.05rem;
-  color: var(--texto);
-  background-color: rgba(6, 9, 10, 0.72);
-  border: 2px solid rgba(232, 255, 241, 0.35);
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-
-  transition: border-color 150ms ease, background-color 150ms ease;
-}
-
-@media (hover: hover) {
-  .sonido:hover {
-    border-color: var(--texto);
-    background-color: rgba(255, 255, 255, 0.06);
-  }
-}
-
-.sonido:active {
-  transform: translateY(2px);
-}
-
-.sonido:focus-visible {
-  outline: 3px solid var(--texto);
-  outline-offset: 3px;
-}
-
-.sonido__icono {
-  line-height: 1;
-}
-
-/* --- 6. Primer toque --- */
+/* --- 5. Primer toque --- */
 .toca {
   padding: 1rem 1.5rem;
   font-family: inherit;
@@ -522,8 +480,7 @@ body::after {
 /* Accesibilidad: marco visible al navegar con el teclado */
 .boton:focus-visible,
 .opcion:focus-visible,
-.toca:focus-visible,
-.sonido:focus-visible {
+.toca:focus-visible {
   outline: 3px solid var(--texto);
   outline-offset: 3px;
 }
@@ -544,13 +501,23 @@ body::after {
   transform: scale(0.97);
 }
 
-/* --- 16. Celebración: tortugas que forman la frase --- */
+/* --- 16. Celebración: tortugas que forman el título --- */
 .mensajeTortugas {
   position: relative;
   z-index: 2;
+  width: min(100%, 38rem);
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(0.7rem, 2.2vh, 1.1rem);
+}
+
+/* El título lo forman las tortugas, letra a letra */
+.tituloTortugas {
   margin: 0;
-  max-width: min(100%, 34rem);
-  font-size: clamp(1.35rem, 7.4vw, 2.7rem);
+  max-width: 100%;
+  font-size: clamp(1.2rem, 6.6vw, 2.6rem);
   font-weight: 700;
   letter-spacing: 0.05em;
   line-height: 1.2;
@@ -579,8 +546,8 @@ body::after {
   }
 }
 
-/* Brillo al completarse la frase: sube y luego se queda suave */
-.mensajeTortugas.completo {
+/* Brillo al completarse el título: sube y luego se queda suave */
+.mensajeTortugas.completo .tituloTortugas {
   animation: brilloFrase 2.6s ease-out both;
 }
 
@@ -598,6 +565,42 @@ body::after {
       0 0 12px rgba(183, 255, 214, 0.5),
       0 0 30px rgba(242, 207, 139, 0.24);
   }
+}
+
+/* Párrafos del mensaje: ya ocupan su sitio, pero aparecen al final */
+.textoFinal {
+  width: 100%;
+
+  display: flex;
+  flex-direction: column;
+  gap: clamp(0.5rem, 1.5vh, 0.8rem);
+}
+
+.textoFinal p {
+  margin: 0;
+  font-size: clamp(0.88rem, 3vw, 1.05rem);
+  font-weight: 400;
+  line-height: 1.55;
+  color: var(--texto);
+  text-shadow: 0 0 10px rgba(232, 255, 241, 0.12);
+
+  opacity: 0;
+  transform: translateY(7px);
+  transition: opacity 800ms ease, transform 800ms ease;
+}
+
+.textoFinal p.visible {
+  opacity: 1;
+  transform: none;
+  text-shadow:
+    0 0 10px rgba(232, 255, 241, 0.2),
+    0 0 26px rgba(242, 207, 139, 0.12);
+}
+
+/* La última línea (cierre o bendición) tiene más peso visual */
+.textoFinal p.cierre {
+  font-weight: 700;
+  color: var(--crema);
 }
 
 /* Capa donde vuelan las tortugas. Es fija para poder entrar desde fuera
@@ -659,97 +662,6 @@ body::after {
   50%      { transform: translateY(-2px); }
 }
 
-/* --- 16b. Celebración: hormigas que forman los mensajes --- */
-.mensajeHormigas {
-  position: relative;
-  z-index: 2;
-  margin: 0;
-  max-width: min(100%, 40rem);
-  font-size: clamp(1.05rem, 5.4vw, 2.2rem);
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  line-height: 1.28;
-  color: var(--crema);
-}
-
-/* Brillo cálido al completarse los dos mensajes */
-.mensajeHormigas.completo {
-  animation: brilloHormigas 2.6s ease-out both;
-}
-
-@keyframes brilloHormigas {
-  0% {
-    text-shadow: 0 0 0 rgba(242, 207, 139, 0);
-  }
-  35% {
-    text-shadow:
-      0 0 22px rgba(242, 207, 139, 0.95),
-      0 0 58px rgba(243, 201, 220, 0.55);
-  }
-  100% {
-    text-shadow:
-      0 0 12px rgba(242, 207, 139, 0.55),
-      0 0 30px rgba(243, 201, 220, 0.3);
-  }
-}
-
-.capaHormigas {
-  position: fixed;
-  inset: 0;
-  z-index: 3;
-  pointer-events: none;
-}
-
-.hormiga {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: clamp(15px, 4vw, 20px);
-  opacity: 1;
-  transition: opacity 300ms ease;
-  will-change: transform;
-}
-
-/* Al entregar su letra, la hormiga se desvanece */
-.hormiga.entregada {
-  opacity: 0;
-}
-
-.hormiga__cuerpo {
-  position: relative;
-  display: block;
-  animation: flotarHormiga 1.4s ease-in-out infinite;
-}
-
-.hormiga__dibujo {
-  display: block;
-  width: 100%;
-  height: auto;
-}
-
-/* La letra viaja sobre la hormiga, en una etiqueta pequeña */
-.hormiga__letra {
-  position: absolute;
-  left: 50%;
-  bottom: calc(100% + 1px);
-  transform: translateX(-50%);
-
-  padding: 0 2px;
-  font-size: 0.52rem;
-  font-weight: 700;
-  line-height: 1.35;
-
-  color: var(--crema);
-  background-color: rgba(6, 9, 10, 0.78);
-  border: 1px solid rgba(247, 232, 205, 0.32);
-  border-radius: 2px;
-}
-
-@keyframes flotarHormiga {
-  0%, 100% { transform: translateY(0); }
-  50%      { transform: translateY(-1.5px); }
-}
-
 /* Lienzo de serpentinas y fuegos artificiales (detrás del texto) */
 .lienzoFiesta {
   position: fixed;
@@ -762,12 +674,6 @@ body::after {
 
 /* --- 17. Pantallas muy bajas (móvil en horizontal) --- */
 @media (max-height: 520px) {
-  .sonido {
-    width: 36px;
-    height: 36px;
-    font-size: 0.95rem;
-  }
-
   .juego {
     gap: 0.9rem;
   }
@@ -793,6 +699,24 @@ body::after {
   .opcion {
     font-size: 0.95rem;
     padding-block: 0.55rem;
+  }
+
+  /* En horizontal la última pregunta tiene cuatro opciones:
+     las descartadas se encogen para que la dorada quepa sin scroll. */
+  .opciones {
+    gap: 0.3rem;
+  }
+
+  .opcion.descartada {
+    padding-block: 0.18rem;
+    font-size: 0.7rem;
+    line-height: 1.25;
+  }
+
+  .opcion--dorada {
+    padding-block: 0.35rem;
+    font-size: 0.95rem;
+    line-height: 1.3;
   }
 
   .mensaje {
@@ -828,21 +752,21 @@ body::after {
     line-height: 1.35;
   }
 
-  .mensajeTortugas {
-    font-size: clamp(1.05rem, 4.6vw, 1.7rem);
+  .tituloTortugas {
+    font-size: clamp(1rem, 4.6vw, 1.7rem);
   }
 
-  .mensajeHormigas {
-    font-size: clamp(0.95rem, 4.2vw, 1.55rem);
-    line-height: 1.22;
+  .textoFinal {
+    gap: 0.35rem;
+  }
+
+  .textoFinal p {
+    font-size: clamp(0.72rem, 2.5vw, 0.88rem);
+    line-height: 1.45;
   }
 
   .tortuga {
     width: clamp(22px, 5vw, 30px);
-  }
-
-  .hormiga {
-    width: clamp(13px, 3.4vw, 17px);
   }
 }
 
@@ -870,23 +794,19 @@ body::after {
   }
 
   .tortuga__cuerpo,
-  .hormiga__cuerpo,
   .letra.puesta {
     animation: none;
   }
 
-  .mensajeTortugas,
-  .mensajeTortugas.completo {
+  .tituloTortugas,
+  .mensajeTortugas.completo .tituloTortugas {
     animation: none;
     text-shadow: 0 0 12px rgba(183, 255, 214, 0.45);
   }
 
-  .mensajeHormigas,
-  .mensajeHormigas.completo {
-    animation: none;
-    text-shadow:
-      0 0 12px rgba(242, 207, 139, 0.55),
-      0 0 30px rgba(243, 201, 220, 0.3);
+  .textoFinal p {
+    transition: none;
+    transform: none;
   }
 
   .opcion--dorada,
@@ -899,7 +819,6 @@ body::after {
 
   .boton,
   .opcion,
-  .sonido,
   .final {
     transition: none;
   }
